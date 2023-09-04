@@ -1,0 +1,97 @@
+# Copyright 2023 Deutsche Telekom MMS
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chainlink-ocr.fullname" . }}
+  labels:
+    {{- include "chainlink-ocr.labels" . | nindent 4 }}
+data:
+  config.toml: |
+    RootDir = '~/.chainlink'
+
+    [Feature]
+    FeedsManager = {{ .Values.feature.feedsManager }}
+
+    [Log]
+    Level = {{ .Values.log.level | quote }}
+    JSONConsole = {{ .Values.log.jsonConsole }}
+
+    [WebServer]
+    AllowOrigins = {{ .Values.webServer.allowOrigins | quote }}
+    SecureCookies = {{ .Values.webServer.secureCookies }}
+    BridgeCacheTTL = {{ .Values.webServer.bridgeCacheTTL | quote }}
+
+    [WebServer.TLS]
+    HTTPSPort = {{ .Values.webServer.tls.httpsPort }}
+
+    [OCR]
+    Enabled = {{ .Values.ocr.enabled }}
+    KeyBundleID = {{ .Values.ocr.keyBundleId | quote }}
+    TransmitterAddress = {{ .Values.ocr.transmitterAddress | quote }}
+
+    [P2P]
+    PeerID = {{ .Values.p2p.peerId | quote }}
+    TraceLogging = {{ .Values.p2p.traceLogging }}
+
+    [P2P.V1]
+    Enabled = false
+
+    [P2P.V2]
+    Enabled = {{ .Values.p2p.v2.enabled }}
+    {{- if .Values.p2p.v2.announceAddresses }}
+    AnnounceAddresses = [{{ join "," .Values.p2p.v2.announceAddresses | quote }}]
+    {{- else }}
+    AnnounceAddresses = ["{{ include "chainlink-ocr.loadBalancerIP" . }}:{{ .Values.service.p2p.port }}"]
+    {{- end }}
+    {{- $listenAddresses := toJson .Values.p2p.v2.listenAddresses }}
+    ListenAddresses = {{ join "," $listenAddresses }}
+    {{- $defaultBootstrappers := toJson .Values.p2p.v2.defaultBootstrappers }}
+    DefaultBootstrappers = {{ join "," $defaultBootstrappers }}
+
+    [[EVM]]
+    ChainID = {{ .Values.evm.chainId | quote }}
+    FinalityDepth = {{ .Values.evm.finalityDepth }}
+    MinIncomingConfirmations = {{ .Values.evm.minIncomingConfirmations }}
+    MinContractPayment = {{ .Values.evm.minContractPayment | quote }}
+
+    [EVM.GasEstimator]
+    LimitDefault = {{ .Values.evm.gasEstimator.limitDefault }}
+    BumpMin = {{ .Values.evm.gasEstimator.bumpMin | quote }}
+    BumpThreshold = {{ .Values.evm.gasEstimator.bumpThreshold }}
+
+    [EVM.HeadTracker]
+    HistoryDepth = {{ .Values.evm.headTracker.historyDepth }}
+    MaxBufferSize = {{ .Values.evm.headTracker.maxBufferSize }}
+
+    [[EVM.Nodes]]
+    Name = {{- index .Values.evm.nodes 0 "name" | quote }}
+    WSURL = {{- index .Values.evm.nodes 0 "wsurl" | quote }}
+    HTTPURL = {{- index .Values.evm.nodes 0 "httpUrl" | quote }}
+
+    [[EVM.Nodes]]
+    Name = {{- index .Values.evm.nodes 1 "name" | quote }}
+    WSURL = {{- index .Values.evm.nodes 1 "wsurl" | quote }}
+    HTTPURL = {{- index .Values.evm.nodes 1 "httpUrl" | quote }}
+
+    {{- if .Values.telemetry.enabled }}
+
+    [TelemetryIngress]
+    URL = {{ .Values.telemetry.url | quote }}
+    ServerPubKey = {{ .Values.telemetry.serverPubKey | quote }}
+    UniConn = false
+    Logging = {{ .Values.telemetry.logging }}
+
+    {{- end }}

@@ -1,0 +1,190 @@
+# Copyright 2023 Deutsche Telekom MMS
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+global:
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 1
+    periodSeconds: 5
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 1
+    periodSeconds: 5
+  startupProbe:
+    enabled: true
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 20
+
+## TOML configuration description can be found here:
+## https://github.com/smartcontractkit/chainlink/blob/v1.13.0/docs/CONFIG.md
+## Documentation which is specific to this chart and cannot be found
+## in the chainlink documentation is located above a specific property
+##
+feature:
+  feedsManager: true
+log:
+  level: "info"
+  jsonConsole: false
+webServer:
+  secureCookies: false
+  allowOrigins: "*"
+  tls:
+    httpsPort: 6689
+  bridgeCacheTTL: ""
+ocr:
+  enabled: false
+  keyBundleId: ""
+  transmitterAddress: ""
+  credentials:
+    api:
+      user: ""
+      password: ""
+p2p:
+  peerId: ""
+  traceLogging: false
+  v2:
+    enabled: true
+    ## @param p2p.v2.announceAddresses For every ip in the array you need to add the value from service.p2p.port
+    ## Example: - "1.2.3.4:7990"
+    ##
+    announceAddresses: []
+    ## @param p2p.v2.listenAddresses For every ip in the array you need to add the value from service.p2p.port
+    ## Example: - "0.0.0.0:7990"
+    ##
+    listenAddresses:
+      - "0.0.0.0:7990"
+    defaultBootstrappers: []
+evm:
+  chainId: 1
+  finalityDepth: 50
+  minIncomingConfirmations: 3
+  minContractPayment: "0.1 link"
+  gasEstimator:
+    limitDefault: 500_000
+    bumpMin: "5 gwei"
+    bumpThreshold: 3
+  headTracker:
+    historyDepth: 100
+    maxBufferSize: 3
+  nodes:
+    - name: ""
+      wsurl: ""
+      httpUrl: ""
+    - name: ""
+      wsurl: ""
+      httpUrl: ""
+
+## Secrets toml description can be found here:
+## https://github.com/smartcontractkit/chainlink/blob/v1.13.0/docs/SECRETS.md
+##
+postgres:
+  host: ""
+  port: 5432
+  user: "postgres"
+  password: ""
+  database: "chainlink"
+  sslmode: "disable"
+## The keystore passphrase needs to be base64 encoded
+##
+keystorePassword: ""
+
+## Auth data to send telemetry data to Chainlink
+##
+telemetry:
+  enabled: false
+  # Variables for explorer instead of OTI (in case of rollback)
+  # accessKey: ""
+  # secretKey: ""
+  # explorerUrl: ""
+
+  # new variables specific to OTI setup
+  url: ""
+  serverPubKey: ""
+  logging: false
+
+## Env variable to enable development mode which makes it possible to create webhook jobs.
+## It is recommended that this is set to 'false' for prod deployments.
+##
+chainlinkDev: "false"
+
+replicaCount: 1
+
+image:
+  registry: "docker.io"
+  repository: "smartcontract/chainlink"
+  pullPolicy: "IfNotPresent"
+  tag: "2.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  web:
+    name: "web-port"
+    type: "ClusterIP"
+    port: 6688
+  p2p:
+    port: 7990
+
+podSecurityContext: {}
+
+securityContext:
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 14933
+
+resources:
+  requests:
+    cpu: "350m"
+    memory: "1024Mi"
+  limits:
+    cpu: "350m"
+    memory: "1024Mi"
+
+metrics:
+  enabled: "false"
+  serviceMonitor:
+    enabled: "false"
+    interval: "30s"
+  prometheusRule:
+    enabled: "false"
+    rules: []
+
+ingress:
+  enabled: "false"
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: ""
+    nginx.ingress.kubernetes.io/auth-url: ""
+    # yamllint disable rule:line-length
+    nginx.ingress.kubernetes.io/auth-signin: ""
+    # yamllint enable rule:line-length
+  hosts:
+    - host: ""
+  tls:
+    - secretName: ""
+      hosts:
+        - ""
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+...
